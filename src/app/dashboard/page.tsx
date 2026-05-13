@@ -2,9 +2,8 @@
 
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { UploadCloud, FileText, Download, CheckCircle, AlertCircle, Settings, Wrench, Battery, Droplet, Wind, Fan } from "lucide-react";
+import { UploadCloud, FileText, Download, CheckCircle, AlertCircle, Settings, Wrench, Battery, Droplet, Wind, Fan, Clock, ChevronRight } from "lucide-react";
 
-// Type definitions matching our API response
 interface VehicleDetails {
   make: string;
   model: string;
@@ -35,6 +34,13 @@ interface AnalysisResult {
   extraConsumables: ExtraConsumable[];
 }
 
+interface HistoryItem {
+  id: string;
+  rcNumber: string;
+  timestamp: string;
+  data: AnalysisResult;
+}
+
 export default function DashboardPage() {
   const router = useRouter();
   const [file, setFile] = useState<File | null>(null);
@@ -43,18 +49,32 @@ export default function DashboardPage() {
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [vehicleData, setVehicleData] = useState<any>(null);
+  const [history, setHistory] = useState<HistoryItem[]>([]);
 
   const reportRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // Check if user is authenticated (demo logic)
     const storedData = sessionStorage.getItem("vehicleData");
     if (!storedData) {
       router.push("/");
     } else {
-      setVehicleData(JSON.parse(storedData));
+      const data = JSON.parse(storedData);
+      setVehicleData(data);
+      fetchHistory(data.rcNumber);
     }
   }, [router]);
+
+  const fetchHistory = async (rcNumber: string) => {
+    try {
+      const res = await fetch(`/api/history?rcNumber=${rcNumber}`);
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setHistory(data.data);
+      }
+    } catch (err) {
+      console.error("Failed to fetch history");
+    }
+  };
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
@@ -86,7 +106,7 @@ export default function DashboardPage() {
   };
 
   const handleUpload = async () => {
-    if (!file) return;
+    if (!file || !vehicleData) return;
 
     setIsAnalyzing(true);
     setError(null);
@@ -94,6 +114,7 @@ export default function DashboardPage() {
 
     const formData = new FormData();
     formData.append("file", file);
+    formData.append("rcNumber", vehicleData.rcNumber);
 
     try {
       const res = await fetch("/api/analyze", {
@@ -104,6 +125,7 @@ export default function DashboardPage() {
       const data = await res.json();
       if (res.ok && data.success) {
         setResult(data.data);
+        fetchHistory(vehicleData.rcNumber); // Refresh history
       } else {
         setError(data.error || "Failed to analyze the bill.");
       }
@@ -117,7 +139,6 @@ export default function DashboardPage() {
   const handleDownloadPDF = async () => {
     if (!reportRef.current) return;
     
-    // Dynamically import html2pdf to prevent SSR "self is not defined" error
     // @ts-ignore
     const html2pdf = (await import("html2pdf.js")).default;
     
@@ -133,7 +154,6 @@ export default function DashboardPage() {
     html2pdf().set(opt).from(element).save();
   };
 
-  // Helper to render animated icons for parts based on keyword
   const renderPartIcon = (partName: string) => {
     const name = partName.toLowerCase();
     if (name.includes("oil") || name.includes("fluid")) return <Droplet className="animate-float" size={40} color="var(--accent-primary)" />;
@@ -144,7 +164,7 @@ export default function DashboardPage() {
     return <Settings size={40} style={{ animation: "spin 5s linear infinite" }} color="var(--accent-secondary)" />;
   };
 
-  if (!vehicleData) return null; // Prevent flash before redirect
+  if (!vehicleData) return null;
 
   return (
     <div className="container" style={{ padding: "2rem 1.5rem" }}>
@@ -160,67 +180,95 @@ export default function DashboardPage() {
       </header>
 
       {!result && (
-        <div className="glass-card animate-fade-in" style={{ padding: "3rem", textAlign: "center", maxWidth: "600px", margin: "0 auto" }}>
-          <h2 style={{ marginBottom: "1rem" }}>Upload Service Bill</h2>
-          <p style={{ marginBottom: "2rem" }}>Securely upload your e-receipt or scanned bill (PDF/Image). Our AI will break down the costs and explain each part.</p>
-          
-          <div 
-            onDragOver={handleDragOver}
-            onDragLeave={handleDragLeave}
-            onDrop={handleDrop}
-            style={{
-              border: `2px dashed ${isDragging ? "var(--accent-primary)" : "var(--border-strong)"}`,
-              borderRadius: "var(--radius-lg)",
-              padding: "3rem",
-              background: isDragging ? "rgba(59, 130, 246, 0.05)" : "rgba(0,0,0,0.2)",
-              transition: "all 0.2s ease",
-              cursor: "pointer",
-              marginBottom: "1.5rem"
-            }}
-            onClick={() => document.getElementById('file-upload')?.click()}
-          >
-            <input 
-              type="file" 
-              id="file-upload" 
-              style={{ display: "none" }} 
-              accept=".pdf,image/png,image/jpeg"
-              onChange={(e) => e.target.files && handleFileSelection(e.target.files[0])}
-            />
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 300px", gap: "2rem", alignItems: "start" }}>
+          <div className="glass-card animate-fade-in" style={{ padding: "3rem", textAlign: "center" }}>
+            <h2 style={{ marginBottom: "1rem" }}>Upload Service Bill</h2>
+            <p style={{ marginBottom: "2rem" }}>Securely upload your e-receipt or scanned bill (PDF/Image). Our AI will break down the costs and explain each part.</p>
             
-            {file ? (
-              <div className="flex-center" style={{ flexDirection: "column", gap: "0.5rem" }}>
-                <FileText size={48} color="var(--accent-success)" />
-                <p style={{ margin: 0, fontWeight: "500", color: "var(--text-primary)" }}>{file.name}</p>
-                <p style={{ margin: 0, fontSize: "0.75rem" }}>{(file.size / 1024 / 1024).toFixed(2)} MB</p>
+            <div 
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+              style={{
+                border: `2px dashed ${isDragging ? "var(--accent-primary)" : "var(--border-strong)"}`,
+                borderRadius: "var(--radius-lg)",
+                padding: "3rem",
+                background: isDragging ? "rgba(59, 130, 246, 0.05)" : "rgba(0,0,0,0.05)",
+                transition: "all 0.2s ease",
+                cursor: "pointer",
+                marginBottom: "1.5rem"
+              }}
+              onClick={() => document.getElementById('file-upload')?.click()}
+            >
+              <input 
+                type="file" 
+                id="file-upload" 
+                style={{ display: "none" }} 
+                accept=".pdf,image/png,image/jpeg"
+                onChange={(e) => e.target.files && handleFileSelection(e.target.files[0])}
+              />
+              
+              {file ? (
+                <div className="flex-center" style={{ flexDirection: "column", gap: "0.5rem" }}>
+                  <FileText size={48} color="var(--accent-success)" />
+                  <p style={{ margin: 0, fontWeight: "500", color: "var(--text-primary)" }}>{file.name}</p>
+                  <p style={{ margin: 0, fontSize: "0.75rem" }}>{(file.size / 1024 / 1024).toFixed(2)} MB</p>
+                </div>
+              ) : (
+                <div className="flex-center" style={{ flexDirection: "column", gap: "0.5rem" }}>
+                  <UploadCloud size={48} color="var(--text-muted)" />
+                  <p style={{ margin: 0, color: "var(--text-secondary)" }}>Drag & Drop your bill here</p>
+                  <p style={{ margin: 0, fontSize: "0.75rem" }}>or click to browse</p>
+                </div>
+              )}
+            </div>
+
+            {error && (
+              <div style={{ color: "var(--accent-danger)", fontSize: "0.875rem", marginBottom: "1rem", display: "flex", justifyContent: "center", alignItems: "center", gap: "0.5rem" }}>
+                <AlertCircle size={16} /> {error}
               </div>
+            )}
+
+            <button 
+              className="btn btn-primary" 
+              onClick={handleUpload} 
+              disabled={!file || isAnalyzing}
+              style={{ width: "100%", opacity: (!file || isAnalyzing) ? 0.5 : 1 }}
+            >
+              {isAnalyzing ? (
+                <>
+                  <Settings className="animate-spin" size={18} style={{ animation: "spin 2s linear infinite" }}/> 
+                  Analyzing Bill using AI...
+                </>
+              ) : "Analyze Bill"}
+            </button>
+          </div>
+
+          <div className="glass-panel" style={{ padding: "1.5rem" }}>
+            <h3 style={{ fontSize: "1.25rem", marginBottom: "1rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+              <Clock size={20} color="var(--accent-primary)" /> History
+            </h3>
+            {history.length === 0 ? (
+              <p style={{ fontSize: "0.875rem", color: "var(--text-muted)" }}>No past reports found. Upload your first bill!</p>
             ) : (
-              <div className="flex-center" style={{ flexDirection: "column", gap: "0.5rem" }}>
-                <UploadCloud size={48} color="var(--text-muted)" />
-                <p style={{ margin: 0, color: "var(--text-secondary)" }}>Drag & Drop your bill here</p>
-                <p style={{ margin: 0, fontSize: "0.75rem" }}>or click to browse</p>
+              <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+                {history.map((item) => (
+                  <button 
+                    key={item.id} 
+                    onClick={() => setResult(item.data)}
+                    style={{ background: "rgba(0,0,0,0.05)", border: "1px solid var(--border-subtle)", padding: "1rem", borderRadius: "var(--radius-md)", textAlign: "left", cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center", color: "var(--text-primary)" }}
+                    className="hover-bg"
+                  >
+                    <div>
+                      <p style={{ margin: "0 0 0.25rem 0", fontWeight: "500", fontSize: "0.875rem" }}>Service Report</p>
+                      <p style={{ margin: 0, fontSize: "0.75rem", color: "var(--text-secondary)" }}>{new Date(item.timestamp).toLocaleDateString()}</p>
+                    </div>
+                    <ChevronRight size={16} color="var(--text-muted)" />
+                  </button>
+                ))}
               </div>
             )}
           </div>
-
-          {error && (
-            <div style={{ color: "var(--accent-danger)", fontSize: "0.875rem", marginBottom: "1rem", display: "flex", justifyContent: "center", alignItems: "center", gap: "0.5rem" }}>
-              <AlertCircle size={16} /> {error}
-            </div>
-          )}
-
-          <button 
-            className="btn btn-primary" 
-            onClick={handleUpload} 
-            disabled={!file || isAnalyzing}
-            style={{ width: "100%", opacity: (!file || isAnalyzing) ? 0.5 : 1 }}
-          >
-            {isAnalyzing ? (
-              <>
-                <Settings className="animate-spin" size={18} style={{ animation: "spin 2s linear infinite" }}/> 
-                Analyzing Bill using AI...
-              </>
-            ) : "Analyze Bill"}
-          </button>
         </div>
       )}
 
@@ -229,27 +277,25 @@ export default function DashboardPage() {
           <div className="flex-between" style={{ marginBottom: "1.5rem" }}>
             <h2>Analysis Report</h2>
             <div style={{ display: "flex", gap: "1rem" }}>
-              <button className="btn btn-outline" onClick={() => setResult(null)}>Analyze Another</button>
+              <button className="btn btn-outline" onClick={() => {setResult(null); setFile(null);}}>Back to Dashboard</button>
               <button className="btn btn-primary" onClick={handleDownloadPDF}><Download size={18} /> Export as PDF</button>
             </div>
           </div>
 
-          {/* The Report Container to be exported as PDF */}
           <div ref={reportRef} style={{ background: "var(--bg-base)", padding: "1px" }}>
-            
             <div className="glass-panel" style={{ padding: "2rem", marginBottom: "2rem", background: "rgba(36, 41, 62, 0.4)" }}>
               <h3 style={{ marginBottom: "1.5rem", borderBottom: "1px solid var(--border-subtle)", paddingBottom: "0.5rem" }}>Cost Summary</h3>
               
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "1.5rem" }}>
-                <div style={{ background: "rgba(0,0,0,0.3)", padding: "1.5rem", borderRadius: "var(--radius-md)", borderLeft: "4px solid var(--accent-primary)" }}>
+                <div style={{ background: "rgba(0,0,0,0.1)", padding: "1.5rem", borderRadius: "var(--radius-md)", borderLeft: "4px solid var(--accent-primary)" }}>
                   <p style={{ fontSize: "0.875rem", color: "var(--text-secondary)", margin: 0 }}>Total Bill Amount</p>
-                  <h2 style={{ fontSize: "2rem", margin: "0.5rem 0 0 0", color: "white" }}>₹{result.totalServiceCost.toLocaleString()}</h2>
+                  <h2 style={{ fontSize: "2rem", margin: "0.5rem 0 0 0", color: "var(--text-primary)" }}>₹{result.totalServiceCost.toLocaleString()}</h2>
                 </div>
-                <div style={{ background: "rgba(0,0,0,0.3)", padding: "1.5rem", borderRadius: "var(--radius-md)", borderLeft: "4px solid var(--accent-secondary)" }}>
+                <div style={{ background: "rgba(0,0,0,0.1)", padding: "1.5rem", borderRadius: "var(--radius-md)", borderLeft: "4px solid var(--accent-secondary)" }}>
                   <p style={{ fontSize: "0.875rem", color: "var(--text-secondary)", margin: 0 }}>Total Parts Cost</p>
                   <h2 style={{ fontSize: "1.75rem", margin: "0.5rem 0 0 0" }}>₹{result.partsCost.toLocaleString()}</h2>
                 </div>
-                <div style={{ background: "rgba(0,0,0,0.3)", padding: "1.5rem", borderRadius: "var(--radius-md)", borderLeft: "4px solid var(--accent-warning)" }}>
+                <div style={{ background: "rgba(0,0,0,0.1)", padding: "1.5rem", borderRadius: "var(--radius-md)", borderLeft: "4px solid var(--accent-warning)" }}>
                   <p style={{ fontSize: "0.875rem", color: "var(--text-secondary)", margin: 0 }}>Total Labor Cost</p>
                   <h2 style={{ fontSize: "1.75rem", margin: "0.5rem 0 0 0" }}>₹{result.laborCost.toLocaleString()}</h2>
                 </div>
@@ -268,7 +314,7 @@ export default function DashboardPage() {
                     width: "80px", 
                     height: "80px", 
                     borderRadius: "16px", 
-                    background: "rgba(255,255,255,0.05)",
+                    background: "rgba(128,128,128,0.1)",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
@@ -323,12 +369,13 @@ export default function DashboardPage() {
         </div>
       )}
       
-      {/* Global Style for Keyframe animations used inline */}
       <style dangerouslySetInnerHTML={{__html: `
         @keyframes spin {
           from { transform: rotate(0deg); }
           to { transform: rotate(360deg); }
         }
+        .hover-bg:hover { background: rgba(0,0,0,0.1) !important; }
+        [data-theme='dark'] .hover-bg:hover { background: rgba(255,255,255,0.1) !important; }
       `}} />
     </div>
   );

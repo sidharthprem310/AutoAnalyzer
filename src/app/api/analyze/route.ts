@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { GoogleGenAI } from '@google/genai';
+import { saveReport } from '@/lib/history-store';
 
 // Initialize SDK. It will automatically use process.env.GEMINI_API_KEY if present
 const ai = process.env.GEMINI_API_KEY ? new GoogleGenAI({}) : null;
@@ -59,10 +60,14 @@ export async function POST(request: Request) {
   try {
     const formData = await request.formData();
     const file = formData.get('file') as File | null;
+    const rcNumber = formData.get('rcNumber') as string | null;
 
     if (!file) {
       return NextResponse.json({ success: false, error: 'No file uploaded' }, { status: 400 });
     }
+
+    let resultData = null;
+    let isMockData = false;
 
     // Attempt to use Real API if configured
     if (ai) {
@@ -105,8 +110,8 @@ export async function POST(request: Request) {
 
         const textResponse = response.text;
         if (textResponse) {
-             const parsedData = JSON.parse(textResponse);
-             return NextResponse.json({ success: true, data: parsedData, isMock: false });
+             resultData = JSON.parse(textResponse);
+             isMockData = false;
         }
       } catch (apiError) {
         console.error("Gemini API Error, falling back to mock:", apiError);
@@ -114,13 +119,22 @@ export async function POST(request: Request) {
       }
     }
 
-    // Simulate processing delay for mock
-    await new Promise(resolve => setTimeout(resolve, 2500));
+    if (!resultData) {
+      // Simulate processing delay for mock
+      await new Promise(resolve => setTimeout(resolve, 2500));
+      resultData = MOCK_RESPONSE;
+      isMockData = true;
+    }
+
+    // Save to history if RC is provided
+    if (rcNumber) {
+      await saveReport(rcNumber, resultData);
+    }
     
     return NextResponse.json({ 
       success: true, 
-      data: MOCK_RESPONSE,
-      isMock: true 
+      data: resultData,
+      isMock: isMockData 
     });
 
   } catch (error) {
