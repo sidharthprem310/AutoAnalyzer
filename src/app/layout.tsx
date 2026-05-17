@@ -14,6 +14,8 @@ const outfit = Outfit({
 export const metadata: Metadata = {
   title: "AutoAnalyzer | AI Powered Vehicle Insights",
   description: "Understand your vehicle service bills easily with AI-powered insights, simplified explanations, and cost analysis.",
+  manifest: "/manifest.json",
+  themeColor: "#09090b",
 };
 
 export default function RootLayout({
