@@ -3,6 +3,7 @@ import { Outfit } from "next/font/google";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
+import OfflineWarning from "@/components/OfflineWarning";
 import "./globals.css";
 
 const outfit = Outfit({
@@ -24,6 +25,7 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={`${outfit.variable} bg-gradient-radial`}>
         <ThemeProvider>
+          <OfflineWarning />
           <Navbar />
           <main style={{ flex: 1, display: "flex", flexDirection: "column" }}>
             {children}
