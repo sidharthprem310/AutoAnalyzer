@@ -46,12 +46,10 @@ export default function OfflineWarning() {
             className="z-10 flex flex-col items-center max-w-2xl bg-[var(--card)]/50 p-8 sm:p-12 rounded-3xl border border-white/10 shadow-2xl backdrop-blur-md"
           >
             <div className="relative w-72 h-72 sm:w-80 sm:h-80 mb-6 drop-shadow-2xl">
-              <Image
+              <img
                 src="/car_offline.png"
                 alt="Stranded SUV - No Internet Connection"
-                fill
-                className="object-contain"
-                priority
+                className="w-full h-full object-contain"
               />
             </div>
 

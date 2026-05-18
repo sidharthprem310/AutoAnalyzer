@@ -19,12 +19,10 @@ export default function NotFound() {
         className="z-10 flex flex-col items-center max-w-2xl"
       >
         <div className="relative w-80 h-80 sm:w-96 sm:h-96 mb-8 drop-shadow-2xl">
-          <Image
+          <img
             src="/car_404.png"
             alt="Broken Down SUV - 404 Error"
-            fill
-            className="object-contain"
-            priority
+            className="w-full h-full object-contain"
           />
         </div>
 
