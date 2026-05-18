@@ -63,12 +63,30 @@ export default function LoginPage() {
     }
   };
 
-  const handleVerifyOtp = (e: React.FormEvent) => {
+  const handleVerifyOtp = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (otp === "1234") { 
-      router.push("/dashboard");
-    } else {
-      setError("Invalid OTP. Try 1234 for demo.");
+    setError(null);
+    setLoading(true);
+
+    try {
+      const res = await fetch("/api/auth/verify-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phoneNumber, otp }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok || !data.success) {
+        setError(data.error || "Invalid OTP. Please try again.");
+      } else {
+        sessionStorage.setItem("vehicleData", JSON.stringify(data.data));
+        router.push("/dashboard");
+      }
+    } catch (err) {
+      setError("An unexpected error occurred. Please try again later.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -116,8 +134,8 @@ export default function LoginPage() {
       <div className="glass-card animate-fade-in" style={{ width: "100%", maxWidth: "450px", padding: "2.5rem", position: "relative", zIndex: 10 }}>
         <div style={{ textAlign: "center", marginBottom: "2rem" }}>
           <div className="flex-center" style={{ marginBottom: "1rem" }}>
-            <div style={{ padding: "1rem", background: "rgba(59, 130, 246, 0.1)", borderRadius: "var(--radius-full)", color: "var(--accent-primary)" }}>
-              <Car size={32} />
+            <div style={{ padding: "0.5rem", background: "rgba(59, 130, 246, 0.1)", borderRadius: "var(--radius-lg)" }}>
+              <img src="/logo.png" alt="AutoAnalyzer Logo" style={{ width: "64px", height: "64px", objectFit: "contain" }} />
             </div>
           </div>
           <h1 className="text-gradient" style={{ fontSize: "2rem", marginBottom: "0.5rem" }}>AutoAnalyzer</h1>
@@ -216,12 +234,12 @@ export default function LoginPage() {
               <input
                 type="text"
                 className="input-field"
-                placeholder="1234 (Demo)"
+                placeholder="00000"
                 value={otp}
                 onChange={(e) => setOtp(e.target.value)}
                 style={{ textAlign: "center", letterSpacing: "0.25rem", fontSize: "1.25rem" }}
                 required
-                maxLength={4}
+                maxLength={5}
               />
             </div>
 

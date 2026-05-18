@@ -34,8 +34,8 @@ export function Navbar() {
     <nav className="container" style={{ padding: "1.5rem", display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid var(--border-subtle)" }}>
       {/* Logo Area */}
       <Link href="/" className="flex-center" style={{ gap: "0.75rem", textDecoration: "none" }}>
-        <div style={{ background: "rgba(59, 130, 246, 0.1)", padding: "0.5rem", borderRadius: "var(--radius-full)", color: "var(--accent-primary)" }}>
-          <Car size={24} />
+        <div style={{ background: "rgba(59, 130, 246, 0.1)", padding: "0.25rem", borderRadius: "var(--radius-md)" }}>
+          <img src="/logo.png" alt="AutoAnalyzer Logo" style={{ width: "32px", height: "32px", objectFit: "contain" }} />
         </div>
         <span className="text-gradient" style={{ fontSize: "1.25rem", fontWeight: "700" }}>AutoAnalyzer</span>
       </Link>

@@ -163,6 +163,10 @@ p {
   box-shadow: 0 6px 20px rgba(37, 99, 235, 0.6);
 }
 
+[data-theme='dark'] .btn-primary:hover {
+  color: #0f111a;
+}
+
 .btn-primary:active {
   transform: scale(0.98);
 }
