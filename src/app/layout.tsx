@@ -6,6 +6,8 @@ import { Footer } from "@/components/Footer";
 import OfflineWarning from "@/components/OfflineWarning";
 import "./globals.css";
 
+
+
 const outfit = Outfit({
   variable: "--font-outfit",
   subsets: ["latin"],
@@ -16,6 +18,9 @@ export const metadata: Metadata = {
   description: "Understand your vehicle service bills easily with AI-powered insights, simplified explanations, and cost analysis.",
   manifest: "/manifest.json",
   themeColor: "#09090b",
+   verification: {
+    google: 'xp2FvRIj_pHwvnJ18dX5OVPKqtpp_QVBGoTGNZ82Oi8',
+  },
 };
 
 export default function RootLayout({
