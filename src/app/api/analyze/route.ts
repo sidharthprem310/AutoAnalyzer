@@ -83,7 +83,8 @@ export async function POST(request: Request) {
               {
                 role: 'user',
                 parts: [
-                  { text: `Analyze this vehicle service bill. Extract the total cost, parts cost, and labor cost. Ensure all monetary values are extracted as numeric values representing INR (Indian Rupees). If the bill is in a different currency, extract the raw number but treat it as INR for this application's formatting.
+                  { text: `Analyze this vehicle service bill. Extract the total cost, parts cost, and labor cost. 
+                  CRITICAL: All monetary values MUST be returned in INR (Indian Rupees). If any part on the bill is listed in a foreign currency (e.g., USD, EUR) due to being an imported part, you must automatically convert that foreign currency into approximate INR and include standard Indian import duties/taxes in the final numeric value.
                   Provide a list of parts with their code, cost, labor, and a simple explanation of what the part does for a common person. 
                   Return the result ONLY as a JSON object matching this structure: 
                   {
