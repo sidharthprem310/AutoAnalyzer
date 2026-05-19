@@ -83,7 +83,7 @@ export async function POST(request: Request) {
               {
                 role: 'user',
                 parts: [
-                  { text: `Analyze this vehicle service bill. Extract the total cost, parts cost, and labor cost. 
+                  { text: `Analyze this vehicle service bill. Extract the total cost, parts cost, and labor cost. Ensure all monetary values are extracted as numeric values representing INR (Indian Rupees). If the bill is in a different currency, extract the raw number but treat it as INR for this application's formatting.
                   Provide a list of parts with their code, cost, labor, and a simple explanation of what the part does for a common person. 
                   Return the result ONLY as a JSON object matching this structure: 
                   {
