@@ -16,7 +16,7 @@ const outfit = Outfit({
 export const metadata: Metadata = {
   title: "Auto Bill Analyzer | AutoAnalyzer AI",
   description: "Understand your vehicle service bills instantly. AutoAnalyzer is the ultimate AI-powered auto bill analyzer to translate confusing mechanic receipts into plain English.",
-  keywords: ["auto bill analyzer", "auto analyzer", "autoanalyzer", "autobillanalyzer", "car service bill checker", "mechanic receipt reader", "vehicle repair cost estimator"],
+  keywords: ["auto bill analyzer", "auto analyzer", "autoanalyzer", "autobillanalyzer", "car service bill checker", "mechanic receipt reader", "vehicle repair cost estimator", "vehicle service bill reader", "vehicle service bill analyzer", "car repair bill analyzer", "AI auto mechanic bill reader"],
   manifest: "/manifest.json",
   themeColor: "#09090b",
   openGraph: {
