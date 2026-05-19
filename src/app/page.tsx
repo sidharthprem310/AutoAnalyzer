@@ -12,12 +12,12 @@ export default function WelcomePage() {
 
       <div className="animate-fade-in" style={{ maxWidth: "800px" }}>
         <h1 style={{ fontSize: "clamp(2.5rem, 5vw, 4.5rem)", lineHeight: 1.1, marginBottom: "1.5rem" }}>
-          Understand Your Vehicle <br/>
-          <span className="text-gradient">Service Bills Instantly</span>
+          Understand Your Auto Bills <br/>
+          <span className="text-gradient">Instantly with AutoAnalyzer</span>
         </h1>
         
         <p style={{ fontSize: "clamp(1rem, 2vw, 1.25rem)", color: "var(--text-secondary)", marginBottom: "3rem", maxWidth: "600px", margin: "0 auto 3rem auto" }}>
-          AutoAnalyzer uses advanced AI to break down complex service receipts. Find out exactly what you're paying for in simple, easy-to-understand terms.
+          The ultimate AI <strong>auto bill analyzer</strong>. We break down complex mechanic receipts and service bills so you find out exactly what you're paying for in simple, easy-to-understand terms.
         </p>
 
         <div className="flex-center" style={{ gap: "1.5rem", marginBottom: "4rem", flexWrap: "wrap" }}>
